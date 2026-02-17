@@ -1,68 +1,53 @@
-# import torch
-# import mlflow
-# from model import SimpleCNN
-
-# def train():
-#     model = SimpleCNN()
-#     dummy_input = torch.randn(1,3,224,224)
-#     output = model(dummy_input)
-#     acc = 0.80  # Dummy accuracy for example
-    
-#     torch.save(model.state_dict(), "model.pt")
-    
-#     mlflow.set_experiment("cats_dogs")
-#     with mlflow.start_run():
-#         mlflow.log_param("lr", 0.001)
-#         mlflow.log_metric("accuracy", acc)
-#         mlflow.log_artifact("model.pt")
-
-# if __name__ == "__main__":
-#     train()
-
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import mlflow
-import mlflow.pytorch
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
-import numpy as np
-
 from model import SimpleCNN
 
-# Device
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-# Hyperparameters
+# =========================
+# Configuration
+# =========================
 EPOCHS = 5
-LR = 0.001
+LEARNING_RATE = 0.001
 BATCH_SIZE = 32
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# Create dummy dataset (since we are not using real Kaggle dataset)
+# =========================
+# Dummy Dataset (Pipeline Demo)
+# =========================
 X = torch.randn(500, 3, 224, 224)
 y = torch.randint(0, 2, (500,))
 
 dataset = torch.utils.data.TensorDataset(X, y)
 loader = torch.utils.data.DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
 
-# Model
-model = SimpleCNN().to(device)
+# =========================
+# Model Setup
+# =========================
+model = SimpleCNN().to(DEVICE)
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(model.parameters(), lr=LR)
+optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
-mlflow.set_experiment("cats_dogs")
+# =========================
+# MLflow Setup
+# =========================
+mlflow.set_experiment("cats_dogs_baseline")
 
 with mlflow.start_run():
 
-    # Log parameters
+    # Log hyperparameters
     mlflow.log_param("epochs", EPOCHS)
-    mlflow.log_param("learning_rate", LR)
+    mlflow.log_param("learning_rate", LEARNING_RATE)
     mlflow.log_param("batch_size", BATCH_SIZE)
 
     train_losses = []
     train_accuracies = []
 
-    # Training loop
+    # =========================
+    # Training Loop
+    # =========================
     for epoch in range(EPOCHS):
         model.train()
         running_loss = 0.0
@@ -70,7 +55,8 @@ with mlflow.start_run():
         total = 0
 
         for images, labels in loader:
-            images, labels = images.to(device), labels.to(device)
+            images = images.to(DEVICE)
+            labels = labels.to(DEVICE)
 
             optimizer.zero_grad()
             outputs = model(images)
@@ -94,37 +80,39 @@ with mlflow.start_run():
         mlflow.log_metric("train_loss", epoch_loss, step=epoch)
         mlflow.log_metric("train_accuracy", epoch_accuracy, step=epoch)
 
-        print(f"Epoch {epoch+1}/{EPOCHS} | Loss: {epoch_loss:.4f} | Accuracy: {epoch_accuracy:.4f}")
+        print(f"Epoch [{epoch+1}/{EPOCHS}] "
+              f"Loss: {epoch_loss:.4f} "
+              f"Accuracy: {epoch_accuracy:.4f}")
 
-    # ==========================
+    # =========================
     # Save Model
-    # ==========================
+    # =========================
     torch.save(model.state_dict(), "model.pt")
     mlflow.log_artifact("model.pt")
 
-    # ==========================
-    # Loss Curve Plot
-    # ==========================
+    # =========================
+    # Loss Curve Logging
+    # =========================
     plt.figure()
     plt.plot(range(1, EPOCHS + 1), train_losses, marker='o')
     plt.title("Training Loss Curve")
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
-    plt.grid()
+    plt.grid(True)
     plt.savefig("loss_curve.png")
     mlflow.log_artifact("loss_curve.png")
     plt.close()
 
-    # ==========================
-    # Confusion Matrix
-    # ==========================
+    # =========================
+    # Confusion Matrix Logging
+    # =========================
     model.eval()
     all_preds = []
     all_labels = []
 
     with torch.no_grad():
         for images, labels in loader:
-            images = images.to(device)
+            images = images.to(DEVICE)
             outputs = model(images)
             _, preds = torch.max(outputs, 1)
 
@@ -133,11 +121,14 @@ with mlflow.start_run():
 
     cm = confusion_matrix(all_labels, all_preds)
 
-    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=["Cat", "Dog"])
+    disp = ConfusionMatrixDisplay(
+        confusion_matrix=cm,
+        display_labels=["Cat", "Dog"]
+    )
     disp.plot()
     plt.title("Confusion Matrix")
     plt.savefig("confusion_matrix.png")
     mlflow.log_artifact("confusion_matrix.png")
     plt.close()
 
-    print("Training complete. Model and artifacts logged to MLflow.")
+    print("Training complete. Model, loss curve, and confusion matrix logged to MLflow.")
