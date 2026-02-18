@@ -10,74 +10,47 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # ----------------------------
-      # Checkout Repository
-      # ----------------------------
+      # Checkout
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # ----------------------------
-      # Set up Python
-      # ----------------------------
+      # Setup Python
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
-      # ----------------------------
-      # Install Dependencies
-      # ----------------------------
+      # Install dependencies
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # ----------------------------
-      # Run Unit Tests
-      # ----------------------------
+      # Run unit tests
       - name: Run unit tests
         run: |
           export PYTHONPATH=$PYTHONPATH:.
           pytest
 
-      # ---------------------------
-      # Debug docker log
-      # ---------------------------
-      # - name: Debug Docker Username
-      #   run: echo "Docker username is: ${{ secrets.DOCKER_USERNAME }}"
+      # Login to DockerHub
       - name: Login to DockerHub
         run: |
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u BhavnaYa --password-stdin
 
-
-      # ----------------------------
-      # Build Docker Image
-      # ----------------------------
+      # Build Docker image
       - name: Build Docker image
-        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/cats-dogs:latest .
+        run: docker build -t BhavnaYa/cats-dogs:latest .
 
-      # ----------------------------
-      # Login to DockerHub
-      # ----------------------------
-      - name: Login to DockerHub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-
-      # ----------------------------
-      # Push Docker Image
-      # ----------------------------
+      # Push Docker image
       - name: Push Docker image
-        run: docker push ${{ secrets.DOCKER_USERNAME }}/cats-dogs:latest
+        run: docker push BhavnaYa/cats-dogs:latest
 
-      # ----------------------------
-      # Run Container for Smoke Test
-      # ----------------------------
+      # Run container
       - name: Run Docker container
         run: |
-          docker run -d -p 8000:8000 ${{ secrets.DOCKER_USERNAME }}/cats-dogs:latest
+          docker run -d -p 8000:8000 BhavnaYa/cats-dogs:latest
           sleep 15
 
-      # ----------------------------
-      # Smoke Test
-      # ----------------------------
+      # Smoke test
       - name: Run smoke test
         run: python smoke_test.py
