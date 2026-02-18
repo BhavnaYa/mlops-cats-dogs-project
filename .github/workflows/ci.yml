@@ -40,6 +40,16 @@ jobs:
           export PYTHONPATH=$PYTHONPATH:.
           pytest
 
+      # ---------------------------
+      # Debug docker log
+      # ---------------------------
+      # - name: Debug Docker Username
+      #   run: echo "Docker username is: ${{ secrets.DOCKER_USERNAME }}"
+      - name: Login to DockerHub
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u BhavnaYa --password-stdin
+
+
       # ----------------------------
       # Build Docker Image
       # ----------------------------
