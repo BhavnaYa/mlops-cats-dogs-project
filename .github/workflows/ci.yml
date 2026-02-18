@@ -53,4 +53,4 @@ jobs:
 
       # Smoke test
       - name: Run smoke test
-        run: python smoke_test.py
+        run: python smoke_check.py
