@@ -1,3 +1,16 @@
+# MLOPS Assignment 2 : Group 111
+SHAIK MAHAMMED ASIF : 2024aa05500
+
+BHAVNA YADAV        : 2023ac05950
+
+K JAGADEESH KUMAR   : 2024aa05124
+
+M SWATI RANI        : 2024aa05305
+
+V N SANJAY          : 2024aa05123
+
+---
+
 # 🐶🐱 Cats vs Dogs – End-to-End MLOps Pipeline
 
 This project implements a complete **end-to-end MLOps pipeline** for a binary image classification task (Cats vs Dogs) designed for a pet adoption platform.
